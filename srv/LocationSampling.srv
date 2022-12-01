@@ -1,5 +1,4 @@
-float32[] deltaBlock
-int32[] boundries
+int32[] deltaBlock
 int32[] rasterizedRoom
 float32 visionScope
 ---

@@ -1,6 +1,6 @@
 string name
-int32 blockSize
+float32 blockSize
 ---
-float32[] deltaBlock
-int32[] boundries
+int32[] deltaBlock
+float32[] boundries
 int32[] rasterizedRoom

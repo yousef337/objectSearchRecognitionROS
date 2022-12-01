@@ -9,9 +9,10 @@ from object_search.srv import (
 from os import getcwd
 from math import floor
 import numpy as np
+from geojson import load
 
 
-def retrieveRoomBoundaries(room: str) -> list[list[float]]:
+def retrieveRoomBoundaries(room: str):
     featureFile = getcwd() + '/src/object_search/rooms/rooms.geojson'
     with open(featureFile) as f:
         features = load(f)['features']
@@ -50,9 +51,9 @@ def isInsideRoom(point, polygonCords) -> bool:
 
 
 def rasterizationCB(req: RasterizationRequest) -> RasterizationResponse:
-    roomBoundaries = retrieveRoomBoundaries(req.room)
+    roomBoundaries = retrieveRoomBoundaries(req.name)
 
-    boundries = (None, None, None, None)   # x left, y top, x right, y bottom
+    boundries = [None, None, None, None]   # x left, y top, x right, y bottom
 
     for i in roomBoundaries:
         # x left
@@ -64,28 +65,35 @@ def rasterizationCB(req: RasterizationRequest) -> RasterizationResponse:
             boundries[1] = i[1]
 
         # x right
-        if not boundries[3] or i[0] > boundries[3]:
+        if not boundries[2] or i[0] > boundries[2]:
             boundries[2] = i[0]
 
         # y bottom
-        if not boundries[4] or i[1] < boundries[4]:
+        if not boundries[3] or i[1] < boundries[3]:
             boundries[3] = i[1]
 
     # rasterize
     listXSize = abs(floor((boundries[2] - boundries[0]) / req.blockSize))
     listYSize = abs(floor((boundries[1] - boundries[3]) / req.blockSize))
+    rasterisedRoom = np.ones([listXSize, listYSize], int)
 
-    rasterisedRoom = [[1] * listXSize] * listYSize
-
-    # make 0 where it is outside the room
-    for i in range(len(rasterisedRoom)):
-        for j in range(len(i)):
-            if not isInsideRoom(rasterisedRoom[i][j]):   # fix this
-                rasterisedRoom[i][j] = 0
+    # set to 0 where it is outside the room
+    for i in range(listYSize):
+        for j in range(listXSize):
+            if not isInsideRoom(
+                [
+                    boundries[0] + j * req.blockSize,
+                    boundries[3] + i * req.blockSize,
+                ],
+                roomBoundaries,
+            ):
+                rasterisedRoom[j][i] = 0
+            else:
+                rasterisedRoom[j][i] = 1
 
     res = RasterizationResponse()
     res.deltaBlock = [listXSize, listYSize]
-    res.boundries = list(boundries)
-    res.rasterizedRoom = list(np.array(rasterisedRoom).flatten())
+    res.boundries = boundries
+    res.rasterizedRoom = list(rasterisedRoom.flatten())
 
     return res

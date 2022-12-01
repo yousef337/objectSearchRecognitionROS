@@ -1,7 +1,8 @@
+#!/usr/bin/env python3
 import rospy
 from object_search.srv import LocationSampling, Rasterization
-from .RasterizationSrv import rasterizationCB
-from .PointsSamplingSrv import sampleRoomCB
+from RasterizationSrv import rasterizationCB
+from PointsSamplingSrv import sampleRoomCB
 
 
 rospy.init_node('ServicesNode')
