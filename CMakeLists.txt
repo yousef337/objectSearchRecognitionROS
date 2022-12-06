@@ -60,6 +60,7 @@ add_service_files(
   FILES
   Rasterization.srv
   LocationSampling.srv
+  ObjectDetection.srv
 )
 
 ## Generate actions in the 'action' folder
