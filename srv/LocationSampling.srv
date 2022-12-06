@@ -1,5 +1,8 @@
 int32[] deltaBlock
 int32[] rasterizedRoom
+float32[] boundries
+float32 blockSize
 float32 visionScope
 ---
 int32[] sampledRoom
+float32[] selectedLocations

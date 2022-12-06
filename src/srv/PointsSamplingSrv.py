@@ -43,6 +43,7 @@ def isRightPossible(x, y, sampledRoom):
 def sampleRoomCB(req: LocationSamplingRequest) -> LocationSamplingResponse:
     x = 0
     y = 0
+    cords = []
     res = LocationSamplingResponse()
     sampledRoom = np.array(req.rasterizedRoom).reshape(
         req.deltaBlock[0], req.deltaBlock[1]
@@ -69,6 +70,7 @@ def sampleRoomCB(req: LocationSamplingRequest) -> LocationSamplingResponse:
         nearestCurrent = findNearestPoint([nextX, nextY], sampledRoom)
         if nearestCurrent != [None, None]:
             sampledRoom[nearestCurrent[0]][nearestCurrent[1]] = 2
+            cords.append([req.boundries[0] + nextX * req.blockSize, req.boundries[3] + nextY * req.blockSize])
 
         # move current cord to the next one
         x = floor(nearestCurrent[0] + 2 * req.visionScope)
@@ -83,4 +85,5 @@ def sampleRoomCB(req: LocationSamplingRequest) -> LocationSamplingResponse:
             break
 
     res.sampledRoom = list(sampledRoom.flatten())
+    res.selectedLocations = list(np.array(cords).flatten())
     return res

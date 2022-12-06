@@ -4,6 +4,7 @@ from object_search.srv import LocationSampling, Rasterization, ObjectDetection
 from RasterizationSrv import rasterizationCB
 from PointsSamplingSrv import sampleRoomCB
 from ObjectDetection import ObjectDetector
+from sensor_msgs.msg import Image
 
 rospy.init_node('ServicesNode')
 
