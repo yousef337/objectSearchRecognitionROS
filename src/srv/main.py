@@ -61,7 +61,8 @@ def moveControllerCB(user_data):
 
     user_data.index = user_data.index + 1
     user_data.cords = user_data.cords
-    user_data.target_pose = moveBaseGoal
+
+    user_data.target_pose = moveBaseGoal.target_pose
 
     return 'next'
 
