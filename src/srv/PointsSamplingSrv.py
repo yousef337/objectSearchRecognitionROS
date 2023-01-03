@@ -40,7 +40,7 @@ def isRightPossible(x, y, sampledRoom):
     return False
 
 
-def sampleRoomCB(req: LocationSamplingRequest) -> LocationSamplingResponse:
+def sampleRoomCB(req):
     x = 0
     y = 0
     cords = []
@@ -70,7 +70,12 @@ def sampleRoomCB(req: LocationSamplingRequest) -> LocationSamplingResponse:
         nearestCurrent = findNearestPoint([nextX, nextY], sampledRoom)
         if nearestCurrent != [None, None]:
             sampledRoom[nearestCurrent[0]][nearestCurrent[1]] = 2
-            cords.append([req.boundries[0] + nextX * req.blockSize, req.boundries[3] + nextY * req.blockSize])
+            cords.append(
+                [
+                    req.boundries[0] + nextX * req.blockSize,
+                    req.boundries[3] + nextY * req.blockSize,
+                ]
+            )
 
         # move current cord to the next one
         x = floor(nearestCurrent[0] + 2 * req.visionScope)

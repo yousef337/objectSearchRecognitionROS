@@ -12,7 +12,7 @@ import numpy as np
 from geojson import load
 
 
-def retrieveRoomBoundaries(room: str):
+def retrieveRoomBoundaries(room):
     featureFile = getcwd() + '/src/object_search/rooms/rooms.geojson'
     with open(featureFile) as f:
         features = load(f)['features']
@@ -22,7 +22,7 @@ def retrieveRoomBoundaries(room: str):
 
 
 # https://bryceboe.com/2006/10/23/line-segment-intersection-algorithm/
-def ccw(p1, p2, p3) -> bool:
+def ccw(p1, p2, p3):
     return (p3[1] - p1[1]) * (p2[0] - p1[0]) > (p2[1] - p1[1]) * (
         p3[0] - p1[0]
     )
@@ -34,12 +34,12 @@ def intersect(l1, l2):
     ) != ccw(l1[0], l1[1], l2[1])
 
 
-def isInsideRoom(point, polygonCords) -> bool:
+def isInsideRoom(point, polygonCords):
     orthLine = (
         (point[0], point[1]),
         (point[0], point[1] + settings.POLYGON_CORNOR_FRAME),
     )
-    inside: bool = False
+    inside = False
     for i in range(len(polygonCords)):
         if intersect(
             orthLine,
@@ -50,7 +50,7 @@ def isInsideRoom(point, polygonCords) -> bool:
     return inside
 
 
-def rasterizationCB(req: RasterizationRequest) -> RasterizationResponse:
+def rasterizationCB(req):
     roomBoundaries = retrieveRoomBoundaries(req.name)
 
     boundries = [None, None, None, None]   # x left, y top, x right, y bottom
