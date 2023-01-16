@@ -44,7 +44,10 @@ Images:
   ![RandomSampler](https://user-images.githubusercontent.com/56966315/206865415-ff7f1fad-536b-405a-9ccf-041a86dcee5a.png)
 
 ### Search
-The main algorithm that perform the search. It consist of a smach state machine as illustrated on the following image.
+The main algorithm that perform the search. It consist of a smach state machine as illustrated on the following image. The algorithm instruct the robot to go to the next point on the sampled map, then the robot perform a head tour to examin its field of vision, then it go to the next point on the sampled locations.
+
+![SMACH_DIAGRAM](https://user-images.githubusercontent.com/56966315/212655939-cae06885-d69c-411a-aa3d-2bb40b0efc05.png)
+
 
 **IMPORTANT: The object detection service used in main is not followed here. Instead, an ObjectDetection service is provided**
 
