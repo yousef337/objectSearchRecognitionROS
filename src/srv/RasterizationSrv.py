@@ -73,8 +73,8 @@ def rasterizationCB(req):
             boundries[3] = i[1]
 
     # rasterize
-    listXSize = abs(floor((boundries[2] - boundries[0]) / req.blockSize))
-    listYSize = abs(floor((boundries[1] - boundries[3]) / req.blockSize))
+    listXSize = int(abs(floor((boundries[2] - boundries[0]) / req.blockSize)))
+    listYSize = int(abs(floor((boundries[1] - boundries[3]) / req.blockSize)))
     rasterisedRoom = np.ones([listXSize, listYSize], int)
 
     # set to 0 where it is outside the room

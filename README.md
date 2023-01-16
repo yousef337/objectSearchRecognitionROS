@@ -2,11 +2,11 @@
 
 *Under development*
 
-This package is intended to provide the functionality of searching for a specific object inside a room using ROS. Currently, the package only runs on ROS Noetic.
+This package is intended to provide the functionality of searching for a specific object inside a room using ROS. Currently, the package only runs on ROS Melodic.
 
 The package consists of several services that help to achieve the required task.
 
-## Services (Rasterization)
+## Services
 ### Room Rasterization
 The main task of this service is to rasterize a given room data, given in geojson format, into a programmatically proccesable data structure, mainly list.
 Because a room may not be a rectangle, special values on the lists are allocated to support every room structure. A value of 0 indicate that this coordinate is
@@ -42,3 +42,20 @@ Images:
       
 Images:
   ![RandomSampler](https://user-images.githubusercontent.com/56966315/206865415-ff7f1fad-536b-405a-9ccf-041a86dcee5a.png)
+
+### Search
+The main algorithm that perform the search. It consist of a smach state machine as illustrated on the following image.
+
+**IMPORTANT: The object detection service used in main is not followed here. Instead, an ObjectDetection service is provided**
+
+
+
+#### Input:
+      string name: The name of the item to look for
+      string room: The room to look in
+      float32 blockSize: represents the size that a single list element should represent from the map
+      float32 visionScope: this value represent the range of vision that the robot can sense.
+
+### Output:
+      bool found: True if the required item is found
+

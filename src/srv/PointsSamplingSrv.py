@@ -10,7 +10,7 @@ from object_search.srv import (
 
 
 def findNearestPoint(point, cordsLst):
-    maxProjScope = max(point[0], point[1])
+    maxProjScope = int(max(point[0], point[1]))
 
     for i in range(maxProjScope):
         # check left stride
@@ -54,7 +54,7 @@ def sampleRoomCB(req):
     while x < req.deltaBlock[0] and y < req.deltaBlock[1]:
         # go to the next first in-room cords
         cord = [None, None]
-        yPad = floor(5 * req.visionScope * yPadCounter)
+        yPad = int(floor(5 * req.visionScope * yPadCounter))
         for i in range(x, req.deltaBlock[0]):
             for j in range(yPad, req.deltaBlock[1]):
                 if sampledRoom[i][j] == 1 and cord == [None, None]:
@@ -64,8 +64,8 @@ def sampleRoomCB(req):
             break
 
         # get next cord
-        nextX = floor(cord[0] + req.visionScope)
-        nextY = floor(cord[1] + req.visionScope)
+        nextX = int(floor(cord[0] + req.visionScope))
+        nextY = int(floor(cord[1] + req.visionScope))
 
         nearestCurrent = findNearestPoint([nextX, nextY], sampledRoom)
         if nearestCurrent != [None, None]:
@@ -78,8 +78,8 @@ def sampleRoomCB(req):
             )
 
         # move current cord to the next one
-        x = floor(nearestCurrent[0] + 2 * req.visionScope)
-        y = nearestCurrent[1]
+        x = int(floor(nearestCurrent[0] + 2 * req.visionScope))
+        y = int(nearestCurrent[1])
 
         if not isRightPossible(x, y, sampledRoom):
             x = 0

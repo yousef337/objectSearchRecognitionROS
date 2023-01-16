@@ -1,4 +1,5 @@
 string name
+string room
 float32 blockSize
 float32 visionScope
 ---
