@@ -7,6 +7,7 @@ from object_search.srv import (
     LocationSamplingRequest,
     LocationSamplingResponse,
 )
+from settings import SCOPE_MULTIPLIER
 
 
 def findNearestPoint(point, cordsLst):
@@ -40,6 +41,43 @@ def isRightPossible(x, y, sampledRoom):
     return False
 
 
+def isCovered(x, y, rasRoom, visionRange):
+    for i in range(
+        max(0, x - visionRange), min(len(rasRoom), x + visionRange + 1)
+    ):
+        for j in range(
+            max(0, y - visionRange), min(len(rasRoom[0]), y + visionRange + 1)
+        ):
+            if rasRoom[i][j] == 2:
+                return True
+
+    return False
+
+
+def scoreSampling(rasRoom, visionRange):
+    total = 0
+    covered = 0
+
+    for x in range(len(rasRoom)):
+        for y in range(len(rasRoom[0])):
+            if rasRoom[x][y] == 0 or isCovered(x, y, rasRoom, visionRange):
+                covered += 1
+
+            total += 1
+
+    return float(covered) / total
+
+
+def getNextPoint(x, visionScope, yPadCounter, sampledRoom, deltaBlock):
+    yPad = int(floor(visionScope * yPadCounter))
+    for i in range(x, deltaBlock[0]):
+        for j in range(yPad, deltaBlock[1]):
+            if sampledRoom[i][j] == 1:
+                return [i, j]
+
+    return [None, None]
+
+
 def sampleRoomCB(req):
     x = 0
     y = 0
@@ -52,15 +90,12 @@ def sampleRoomCB(req):
     yPadCounter = 0
 
     while x < req.deltaBlock[0] and y < req.deltaBlock[1]:
-        # go to the next first in-room cords
-        cord = [None, None]
-        yPad = int(floor(5 * req.visionScope * yPadCounter))
-        for i in range(x, req.deltaBlock[0]):
-            for j in range(yPad, req.deltaBlock[1]):
-                if sampledRoom[i][j] == 1 and cord == [None, None]:
-                    cord = [i, j]
+        cord = getNextPoint(
+            x, req.visionScope, yPadCounter, sampledRoom, req.deltaBlock
+        )
+        yPad = int(floor(SCOPE_MULTIPLIER * req.visionScope * yPadCounter))
 
-        if cord == [None, None]:
+        if cords == [None, None]:
             break
 
         # get next cord
@@ -68,22 +103,25 @@ def sampleRoomCB(req):
         nextY = int(floor(cord[1] + req.visionScope))
 
         nearestCurrent = findNearestPoint([nextX, nextY], sampledRoom)
-        if nearestCurrent != [None, None]:
-            sampledRoom[nearestCurrent[0]][nearestCurrent[1]] = 2
-            cords.append(
-                [
-                    req.boundries[0] + nextX * req.blockSize,
-                    req.boundries[3] + nextY * req.blockSize,
-                ]
-            )
+
+        if nearestCurrent == [None, None]:
+            break
+
+        sampledRoom[nearestCurrent[0]][nearestCurrent[1]] = 2
+        cords.append(
+            [
+                req.boundries[0] + nextX * req.blockSize,
+                req.boundries[3] + nextY * req.blockSize,
+            ]
+        )
 
         # move current cord to the next one
-        x = int(floor(nearestCurrent[0] + 2 * req.visionScope))
+        x = int(floor(nearestCurrent[0] + SCOPE_MULTIPLIER * req.visionScope))
         y = int(nearestCurrent[1])
 
         if not isRightPossible(x, y, sampledRoom):
             x = 0
-            y += floor(5 * req.visionScope)
+            y += floor(SCOPE_MULTIPLIER * req.visionScope)
             yPadCounter += 1
 
         if y > len(sampledRoom[1]):
