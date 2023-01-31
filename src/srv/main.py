@@ -6,16 +6,21 @@ from object_search.srv import (
     ObjectFinderResponse,
 )
 from object_search.srv import LocationSampling, Rasterization, ObjectDetection
+from yolo_object_detection.srv import YoloDetection, YoloDetectionResponse
 import smach
 from smach import Concurrence, CBState
-from smach_ros import SimpleActionState
+from smach_ros import SimpleActionState, IntrospectionServer
 from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
+from sensor_msgs.msg import Image, PointCloud2
 import numpy as np
-import actionlib
-from sensor_msgs.msg import Image
 from lasr_perception_server.srv import DetectImage
+import actionlib
 from play_motion_msgs.msg import PlayMotionAction, PlayMotionGoal
 from geometry_msgs.msg import Twist
+
+
+servers = []
+found = False
 
 
 def prepareData(room, blockSize, visionScope):
@@ -36,6 +41,13 @@ def prepareData(room, blockSize, visionScope):
     )
 
 
+
+def stopAllServers():
+    global servers
+    for i in servers:
+        i.cancel_all_goals()
+
+
 def objectDetectionCB(user_data):
     rospy.wait_for_service('lasr_perception_server/detect_objects_image')
     objectRecognitionService = rospy.ServiceProxy(
@@ -47,7 +59,12 @@ def objectDetectionCB(user_data):
         resp = objectRecognitionService(
             [img_msg], 'coco', 0.7, 0.3, [user_data.searchFor], 'yolo'
         ).detected_objects
+
         if user_data.searchFor in list(map(lambda f: f.name, resp)):
+            global found
+            found = True
+            stopAllServers()
+
             return 'found'
 
     return 'notFound'
@@ -78,14 +95,18 @@ def moveControllerCB(user_data):
 
 
 def runClient(serverName, msgType, goal):
+    global servers
+
     client = actionlib.SimpleActionClient(serverName, msgType)
     client.wait_for_server()
     client.send_goal(goal)
+    servers.append(client)
     client.wait_for_result()
 
 
 def movePerceptionAround(user_data):
     d = 180
+    global found
 
     for i in range(360 // d):
         moveBaseGoal = MoveBaseGoal()
@@ -100,11 +121,14 @@ def movePerceptionAround(user_data):
         moveBaseGoal.target_pose.pose.orientation.z = d * i
         moveBaseGoal.target_pose.pose.orientation.w = 1
 
-        runClient('move_base', MoveBaseAction, moveBaseGoal)
+        if not found:
+            runClient('move_base', MoveBaseAction, moveBaseGoal)
 
         playMotionGoal = PlayMotionGoal()
         playMotionGoal.motion_name = 'head_tour'
-        runClient('play_motion', PlayMotionAction, playMotionGoal)
+
+        if not found:
+            runClient('play_motion', PlayMotionAction, playMotionGoal)
 
     user_data.index = user_data.index
     user_data.cords = user_data.cords
@@ -159,7 +183,6 @@ def objectFinderCB(req):
                 ),
                 transitions={'next': 'MoveAction', 'end': 'end'},
             )
-
             smach.StateMachine.add(
                 'MovePerceptionAround',
                 CBState(
@@ -170,7 +193,6 @@ def objectFinderCB(req):
                 ),
                 transitions={'next': 'MoveController'},
             )
-
             smach.StateMachine.add(
                 'MoveAction',
                 SimpleActionState(
@@ -189,6 +211,8 @@ def objectFinderCB(req):
 
         smach.Concurrence.add('MoveParent', moveParent)
 
+    sis = IntrospectionServer('ObjectSearch', objectFinder, '/SM_ROOT')
+    sis.start()
     stateRes = objectFinder.execute()
 
     res = ObjectFinderResponse()
